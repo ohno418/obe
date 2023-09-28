@@ -1,3 +1,16 @@
+use crate::dom;
+
+// Parse an HTML document and return the root element.
+pub fn parse(source: String) -> dom::Node {
+    let nodes = Parser {
+        pos: 0,
+        input: source,
+    }
+    .parse_nodes();
+    dom::elem("html".to_string(), dom::AttrMap::new(), nodes)
+}
+
+#[derive(Debug)]
 struct Parser {
     /// The index of the next character that hasn't be processed yet.
     pos: usize,
@@ -52,11 +65,116 @@ impl Parser {
             _ => false,
         })
     }
+
+    /// Parse a single node.
+    fn parse_node(&mut self) -> dom::Node {
+        match self.next_char() {
+            '<' => self.parse_element(),
+            _ => self.parse_text(),
+        }
+    }
+
+    /// Parse a text node.
+    fn parse_text(&mut self) -> dom::Node {
+        dom::text(self.consume_while(|c| c != '<'))
+    }
+
+    /// Parse a single element, including its open tag, contents, and closing tag.
+    fn parse_element(&mut self) -> dom::Node {
+        // opening tag
+        assert!(self.consume_char() == '<');
+        let tag_name = self.parse_tag_name();
+        let attrs = self.parse_attributes();
+        assert!(self.consume_char() == '>');
+
+        // contents
+        let children = self.parse_nodes();
+
+        // closing tag
+        assert!(self.consume_char() == '<');
+        assert!(self.consume_char() == '/');
+        assert!(self.parse_tag_name() == tag_name);
+        assert!(self.consume_char() == '>');
+
+        dom::elem(tag_name, attrs, children)
+    }
+
+    /// Parse a single name="value" pair.
+    fn parse_attr(&mut self) -> (String, String) {
+        let name = self.parse_tag_name();
+        assert!(self.consume_char() == '=');
+        let value = self.parse_attr_value();
+        (name, value)
+    }
+
+    /// Parse a quoted value.
+    fn parse_attr_value(&mut self) -> String {
+        let open_quote = self.consume_char();
+        assert!(open_quote == '"' || open_quote == '\'');
+        let value = self.consume_while(|c| c != open_quote);
+        self.consume_char();
+        value
+    }
+
+    /// Parse a list of name="value" pairs, separated by whitespace.
+    fn parse_attributes(&mut self) -> dom::AttrMap {
+        let mut attrs = dom::AttrMap::new();
+        loop {
+            self.consume_whitespace();
+            if self.next_char() == '>' {
+                break;
+            }
+            let (name, value) = self.parse_attr();
+            attrs.insert(name, value);
+        }
+        attrs
+    }
+
+    /// Parse a sequence of sibling nodes.
+    fn parse_nodes(&mut self) -> Vec<dom::Node> {
+        let mut nodes = Vec::new();
+        loop {
+            self.consume_whitespace();
+            if self.eof() || self.starts_with("</") {
+                break;
+            }
+            nodes.push(self.parse_node());
+        }
+        nodes
+    }
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn parse_html_document() {
+        let source = "<div><div id=\"main\">hello</div><p>parag</p></div>".to_string();
+        assert_eq!(
+            parse(source),
+            dom::elem(
+                String::from("html"),
+                dom::AttrMap::new(),
+                vec![dom::elem(
+                    String::from("div"),
+                    dom::AttrMap::new(),
+                    vec![
+                        dom::elem(
+                            String::from("div"),
+                            dom::AttrMap::from([("id".to_string(), "main".to_string()),]),
+                            vec![dom::text("hello".to_string())],
+                        ),
+                        dom::elem(
+                            String::from("p"),
+                            dom::AttrMap::new(),
+                            vec![dom::text("parag".to_string())],
+                        ),
+                    ],
+                ),],
+            ),
+        );
+    }
 
     #[test]
     fn next_char() {
@@ -160,5 +278,103 @@ mod tests {
 
         let s = parser.parse_tag_name();
         assert_eq!(s, String::from("Hello"));
+    }
+
+    #[test]
+    fn parse_text() {
+        let mut parser = Parser {
+            pos: 5,
+            input: String::from("<div>hello</div>"),
+        };
+        assert_eq!(parser.parse_text(), dom::text(String::from("hello")),);
+    }
+
+    #[test]
+    fn parse_element() {
+        let mut parser = Parser {
+            pos: 0,
+            input: String::from("<div>hello</div>"),
+        };
+        assert_eq!(
+            parser.parse_element(),
+            dom::elem(
+                String::from("div"),
+                dom::AttrMap::new(),
+                vec![dom::text("hello".to_string())],
+            ),
+        );
+
+        // nested
+        let mut parser = Parser {
+            pos: 0,
+            input: String::from("<div><p>parag</p></div>"),
+        };
+        assert_eq!(
+            parser.parse_element(),
+            dom::elem(
+                String::from("div"),
+                dom::AttrMap::new(),
+                vec![dom::elem(
+                    String::from("p"),
+                    dom::AttrMap::new(),
+                    vec![dom::text("parag".to_string()),],
+                ),],
+            ),
+        );
+
+        // with attrs
+        let mut parser = Parser {
+            pos: 0,
+            input: String::from("<div id=\"main\" class=\"test\">hello</div>"),
+        };
+        assert_eq!(
+            parser.parse_element(),
+            dom::elem(
+                String::from("div"),
+                dom::AttrMap::from([
+                    ("id".to_string(), "main".to_string()),
+                    ("class".to_string(), "test".to_string()),
+                ]),
+                vec![dom::text("hello".to_string())],
+            ),
+        );
+    }
+
+    #[test]
+    fn parse_attributes() {
+        let mut parser = Parser {
+            pos: 0,
+            input: String::from("id=\"main\" class=\"someclass\" >"),
+        };
+        assert_eq!(
+            parser.parse_attributes(),
+            dom::AttrMap::from([
+                ("id".to_string(), "main".to_string()),
+                ("class".to_string(), "someclass".to_string()),
+            ]),
+        );
+    }
+
+    #[test]
+    fn parse_nodes() {
+        let mut parser = Parser {
+            pos: 0,
+            input: String::from("<div id=\"main\">hello</div><p>parag</p>"),
+        };
+        assert_eq!(
+            parser.parse_nodes(),
+            vec![
+                dom::elem(
+                    String::from("div"),
+                    dom::AttrMap::from([("id".to_string(), "main".to_string()),]),
+                    vec![dom::text("hello".to_string())],
+                ),
+                dom::elem(
+                    String::from("p"),
+                    dom::AttrMap::new(),
+                    vec![dom::text("parag".to_string())],
+                ),
+            ],
+        );
     }
 }
