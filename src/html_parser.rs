@@ -1,6 +1,6 @@
 use crate::dom;
 
-// Parse an HTML document and return the root element.
+/// Parse an HTML document and return the root element.
 pub fn parse(source: String) -> dom::Node {
     let nodes = Parser {
         pos: 0,
