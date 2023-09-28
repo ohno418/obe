@@ -1,4 +1,4 @@
-mod node;
+mod dom;
 
 fn main() {
     println!("Hello, world!");
