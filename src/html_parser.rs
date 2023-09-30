@@ -180,6 +180,11 @@ mod tests {
             ),
         );
     }
+}
+
+#[cfg(test)]
+mod parser_tests {
+    use super::*;
 
     #[test]
     fn next_char() {
