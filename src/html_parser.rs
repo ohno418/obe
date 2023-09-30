@@ -28,6 +28,91 @@ struct Parser {
 }
 
 impl Parser {
+    /// Parse a sequence of sibling nodes.
+    fn parse_nodes(&mut self) -> Vec<dom::Node> {
+        let mut nodes = Vec::new();
+        loop {
+            self.consume_whitespace();
+            if self.eof() || self.starts_with("</") {
+                break;
+            }
+            nodes.push(self.parse_node());
+        }
+        nodes
+    }
+
+    /// Parse a single node.
+    fn parse_node(&mut self) -> dom::Node {
+        match self.next_char() {
+            '<' => self.parse_element(),
+            _ => self.parse_text(),
+        }
+    }
+
+    /// Parse a single element, including its open tag, contents, and closing tag.
+    fn parse_element(&mut self) -> dom::Node {
+        // opening tag
+        assert!(self.consume_char() == '<');
+        let tag_name = self.parse_tag_name();
+        let attrs = self.parse_attributes();
+        assert!(self.consume_char() == '>');
+
+        // contents
+        let children = self.parse_nodes();
+
+        // closing tag
+        assert!(self.consume_char() == '<');
+        assert!(self.consume_char() == '/');
+        assert!(self.parse_tag_name() == tag_name);
+        assert!(self.consume_char() == '>');
+
+        dom::elem(tag_name, attrs, children)
+    }
+
+    /// Parse a tag or attribute name.
+    fn parse_tag_name(&mut self) -> String {
+        self.consume_while(|c| match c {
+            'a'..='z' | 'A'..='Z' | '0'..='9' => true,
+            _ => false,
+        })
+    }
+
+    /// Parse a list of name="value" pairs, separated by whitespace.
+    fn parse_attributes(&mut self) -> dom::AttrMap {
+        let mut attrs = dom::AttrMap::new();
+        loop {
+            self.consume_whitespace();
+            if self.next_char() == '>' {
+                break;
+            }
+            let (name, value) = self.parse_attr();
+            attrs.insert(name, value);
+        }
+        attrs
+    }
+
+    /// Parse a single name="value" pair.
+    fn parse_attr(&mut self) -> (String, String) {
+        let name = self.parse_tag_name();
+        assert!(self.consume_char() == '=');
+        let value = self.parse_attr_value();
+        (name, value)
+    }
+
+    /// Parse a quoted value.
+    fn parse_attr_value(&mut self) -> String {
+        let open_quote = self.consume_char();
+        assert!(open_quote == '"' || open_quote == '\'');
+        let value = self.consume_while(|c| c != open_quote);
+        self.consume_char();
+        value
+    }
+
+    /// Parse a text node.
+    fn parse_text(&mut self) -> dom::Node {
+        dom::text(self.consume_while(|c| c != '<'))
+    }
+
     /// Read the current character without consuming it.
     fn next_char(&self) -> char {
         self.input[self.pos..].chars().next().unwrap()
@@ -65,91 +150,6 @@ impl Parser {
     /// Consume and discard zero or more whitespace characters.
     fn consume_whitespace(&mut self) {
         self.consume_while(char::is_whitespace);
-    }
-
-    /// Parse a tag or attribute name.
-    fn parse_tag_name(&mut self) -> String {
-        self.consume_while(|c| match c {
-            'a'..='z' | 'A'..='Z' | '0'..='9' => true,
-            _ => false,
-        })
-    }
-
-    /// Parse a single node.
-    fn parse_node(&mut self) -> dom::Node {
-        match self.next_char() {
-            '<' => self.parse_element(),
-            _ => self.parse_text(),
-        }
-    }
-
-    /// Parse a text node.
-    fn parse_text(&mut self) -> dom::Node {
-        dom::text(self.consume_while(|c| c != '<'))
-    }
-
-    /// Parse a single element, including its open tag, contents, and closing tag.
-    fn parse_element(&mut self) -> dom::Node {
-        // opening tag
-        assert!(self.consume_char() == '<');
-        let tag_name = self.parse_tag_name();
-        let attrs = self.parse_attributes();
-        assert!(self.consume_char() == '>');
-
-        // contents
-        let children = self.parse_nodes();
-
-        // closing tag
-        assert!(self.consume_char() == '<');
-        assert!(self.consume_char() == '/');
-        assert!(self.parse_tag_name() == tag_name);
-        assert!(self.consume_char() == '>');
-
-        dom::elem(tag_name, attrs, children)
-    }
-
-    /// Parse a single name="value" pair.
-    fn parse_attr(&mut self) -> (String, String) {
-        let name = self.parse_tag_name();
-        assert!(self.consume_char() == '=');
-        let value = self.parse_attr_value();
-        (name, value)
-    }
-
-    /// Parse a quoted value.
-    fn parse_attr_value(&mut self) -> String {
-        let open_quote = self.consume_char();
-        assert!(open_quote == '"' || open_quote == '\'');
-        let value = self.consume_while(|c| c != open_quote);
-        self.consume_char();
-        value
-    }
-
-    /// Parse a list of name="value" pairs, separated by whitespace.
-    fn parse_attributes(&mut self) -> dom::AttrMap {
-        let mut attrs = dom::AttrMap::new();
-        loop {
-            self.consume_whitespace();
-            if self.next_char() == '>' {
-                break;
-            }
-            let (name, value) = self.parse_attr();
-            attrs.insert(name, value);
-        }
-        attrs
-    }
-
-    /// Parse a sequence of sibling nodes.
-    fn parse_nodes(&mut self) -> Vec<dom::Node> {
-        let mut nodes = Vec::new();
-        loop {
-            self.consume_whitespace();
-            if self.eof() || self.starts_with("</") {
-                break;
-            }
-            nodes.push(self.parse_node());
-        }
-        nodes
     }
 }
 
