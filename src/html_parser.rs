@@ -1,13 +1,22 @@
+//! A HTML parser that supports a tiny subset of HTML.
+
 use crate::dom;
 
 /// Parse an HTML document and return the root element.
 pub fn parse(source: String) -> dom::Node {
-    let nodes = Parser {
+    let mut nodes = Parser {
         pos: 0,
         input: source,
     }
     .parse_nodes();
-    dom::elem("html".to_string(), dom::AttrMap::new(), nodes)
+
+    // If the document contains a root element, just return it. Otherwise,
+    // create one.
+    if nodes.len() == 1 {
+        nodes.swap_remove(0)
+    } else {
+        dom::elem("html".to_string(), dom::AttrMap::new(), nodes)
+    }
 }
 
 #[derive(Debug)]
