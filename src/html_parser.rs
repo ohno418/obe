@@ -163,24 +163,20 @@ mod tests {
         assert_eq!(
             parse(source),
             dom::elem(
-                String::from("html"),
+                String::from("div"),
                 dom::AttrMap::new(),
-                vec![dom::elem(
-                    String::from("div"),
-                    dom::AttrMap::new(),
-                    vec![
-                        dom::elem(
-                            String::from("div"),
-                            dom::AttrMap::from([("id".to_string(), "main".to_string()),]),
-                            vec![dom::text("hello".to_string())],
-                        ),
-                        dom::elem(
-                            String::from("p"),
-                            dom::AttrMap::new(),
-                            vec![dom::text("parag".to_string())],
-                        ),
-                    ],
-                ),],
+                vec![
+                    dom::elem(
+                        String::from("div"),
+                        dom::AttrMap::from([("id".to_string(), "main".to_string()),]),
+                        vec![dom::text("hello".to_string())],
+                    ),
+                    dom::elem(
+                        String::from("p"),
+                        dom::AttrMap::new(),
+                        vec![dom::text("parag".to_string())],
+                    ),
+                ],
             ),
         );
     }
