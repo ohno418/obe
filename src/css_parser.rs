@@ -42,7 +42,7 @@ struct Declaration {
 }
 
 #[derive(Debug, PartialEq)]
-enum Value {
+pub enum Value {
     Keyword(String),
     Length(u32, Unit),
     Colorvalue(Color),
