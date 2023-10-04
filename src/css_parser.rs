@@ -22,17 +22,17 @@ struct Rule {
 }
 
 #[derive(Debug, PartialEq)]
-enum Selector {
+pub enum Selector {
     /// Simple selectors.
     /// spec: https://www.w3.org/TR/CSS2/selector.html#selector-syntax
     Simple(SimpleSelector),
 }
 
 #[derive(Debug, PartialEq)]
-struct SimpleSelector {
-    tag_name: Option<String>,
-    id: Option<String>,
-    class: Vec<String>,
+pub struct SimpleSelector {
+    pub tag_name: Option<String>,
+    pub id: Option<String>,
+    pub class: Vec<String>,
 }
 
 #[derive(Debug, PartialEq)]
@@ -49,12 +49,12 @@ pub enum Value {
 }
 
 #[derive(Debug, PartialEq)]
-enum Unit {
+pub enum Unit {
     Px,
 }
 
 #[derive(Debug, PartialEq)]
-struct Color {
+pub struct Color {
     r: u8,
     g: u8,
     b: u8,

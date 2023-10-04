@@ -4,5 +4,23 @@ mod html_parser;
 mod style;
 
 fn main() {
-    println!("Hello, world!");
+    let _dom = html_parser::parse(
+        r#"
+        <html>
+            <body>
+                <h1>Title</h1>
+                <div id="main" class="test">
+                    <p>Hello <em>world</em>!</p>
+                </div>
+            </body>
+        </html>"#
+            .to_string(),
+    );
+    let _cssom = css_parser::parse(
+        r#"
+        h1, h2, h3 { margin: auto; color: #cc0000; }
+        div.note { margin-bottom: 20px; padding: 10px; }
+        #answer { display: none; }"#
+            .to_string(),
+    );
 }
