@@ -2,12 +2,12 @@ use std::collections::{HashMap, HashSet};
 
 #[derive(Debug, PartialEq)]
 pub struct Node {
-    children: Vec<Node>,
-    node_type: NodeType,
+    pub children: Vec<Node>,
+    pub node_type: NodeType,
 }
 
 #[derive(Debug, PartialEq)]
-enum NodeType {
+pub enum NodeType {
     Text(String),
     Element(ElementData),
 }

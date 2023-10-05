@@ -11,14 +11,14 @@ pub fn parse(source: String) -> Stylesheet {
 
 #[derive(Debug, PartialEq)]
 pub struct Stylesheet {
-    rules: Vec<Rule>,
+    pub rules: Vec<Rule>,
 }
 
 #[derive(Debug, PartialEq)]
-struct Rule {
+pub struct Rule {
     /// Selectors are sorted, most-specific first.
-    selectors: Vec<Selector>,
-    declarations: Vec<Declaration>,
+    pub selectors: Vec<Selector>,
+    pub declarations: Vec<Declaration>,
 }
 
 #[derive(Debug, PartialEq)]
@@ -36,24 +36,24 @@ pub struct SimpleSelector {
 }
 
 #[derive(Debug, PartialEq)]
-struct Declaration {
-    name: String,
-    value: Value,
+pub struct Declaration {
+    pub name: String,
+    pub value: Value,
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq)]
 pub enum Value {
     Keyword(String),
     Length(u32, Unit),
     Colorvalue(Color),
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq)]
 pub enum Unit {
     Px,
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq)]
 pub struct Color {
     r: u8,
     g: u8,
@@ -433,6 +433,7 @@ mod parser_tests {
         assert_eq!(
             selectors,
             vec![
+                // Sorted by specificities.
                 Selector::Simple(SimpleSelector {
                     tag_name: Some("p".to_string()),
                     id: Some("id".to_string()),

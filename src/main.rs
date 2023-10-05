@@ -4,7 +4,7 @@ mod html_parser;
 mod style;
 
 fn main() {
-    let _dom = html_parser::parse(
+    let dom = html_parser::parse(
         r#"
         <html>
             <body>
@@ -16,11 +16,13 @@ fn main() {
         </html>"#
             .to_string(),
     );
-    let _cssom = css_parser::parse(
+    let cssom = css_parser::parse(
         r#"
         h1, h2, h3 { margin: auto; color: #cc0000; }
         div.note { margin-bottom: 20px; padding: 10px; }
         #answer { display: none; }"#
             .to_string(),
     );
+    let style = style::style_tree(&dom, &cssom);
+    dbg!(style);
 }
