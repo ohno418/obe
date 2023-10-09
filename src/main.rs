@@ -24,6 +24,7 @@ fn main() {
         #answer { display: none; }"#
             .to_string(),
     );
-    let style = style::style_tree(&dom, &cssom);
-    dbg!(style);
+    let style_tree = style::style_tree(&dom, &cssom);
+    let layout_tree = layout::build_layout_tree(&style_tree);
+    dbg!(layout_tree);
 }

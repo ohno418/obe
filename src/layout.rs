@@ -1,7 +1,7 @@
 use crate::style::{Display, StyledNode};
 
 /// Build the tree of LayoutBoxes, but don't perform any layout calculations yet.
-fn build_layout_tree<'a>(style_node: &'a StyledNode<'a>) -> LayoutBox<'a> {
+pub fn build_layout_tree<'a>(style_node: &'a StyledNode<'a>) -> LayoutBox<'a> {
     // Create the root box.
     let mut root = LayoutBox::new(match style_node.display() {
         Display::Block => BoxType::BlockNode(style_node),
@@ -30,7 +30,8 @@ fn build_layout_tree<'a>(style_node: &'a StyledNode<'a>) -> LayoutBox<'a> {
     root
 }
 
-struct LayoutBox<'a> {
+#[derive(Debug)]
+pub struct LayoutBox<'a> {
     dimensions: Dimensions,
     box_type: BoxType<'a>,
     children: Vec<LayoutBox<'a>>,
@@ -65,6 +66,7 @@ impl<'a> LayoutBox<'a> {
     }
 }
 
+#[derive(Debug)]
 enum BoxType<'a> {
     BlockNode(&'a StyledNode<'a>),
     InlineNode(&'a StyledNode<'a>),
@@ -73,7 +75,7 @@ enum BoxType<'a> {
     AnonymousBlock,
 }
 
-#[derive(Default)]
+#[derive(Debug, Default)]
 struct Dimensions {
     /// Position of the content area relative to the document origin.
     content: Rect,
@@ -85,7 +87,7 @@ struct Dimensions {
     margin: EdgeSizes,
 }
 
-#[derive(Default)]
+#[derive(Debug, Default)]
 struct Rect {
     x: f32,
     y: f32,
@@ -93,7 +95,7 @@ struct Rect {
     height: f32,
 }
 
-#[derive(Default)]
+#[derive(Debug, Default)]
 struct EdgeSizes {
     left: f32,
     right: f32,
