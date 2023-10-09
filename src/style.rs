@@ -43,7 +43,7 @@ impl<'a> StyledNode<'a> {
 }
 
 /// Apply a stylesheet to an entire DOM tree, returning a StyledNode tree.
-pub fn style_tree<'a>(root: &'a Node, stylesheet: &Stylesheet) -> StyledNode<'a> {
+pub fn style_tree<'a>(root: &'a Node, stylesheet: &'a Stylesheet) -> StyledNode<'a> {
     StyledNode {
         node: root,
         specified_values: match root.node_type {
