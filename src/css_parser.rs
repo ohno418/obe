@@ -1,5 +1,7 @@
 //! A CSS parser that supports a tiny subset of CSS.
 
+use std::str::FromStr;
+
 /// Parse a whole CSS stylesheet.
 pub fn parse(source: String) -> Stylesheet {
     let mut parser = Parser {
@@ -44,7 +46,7 @@ pub struct Declaration {
 #[derive(Clone, Debug, PartialEq)]
 pub enum Value {
     Keyword(String),
-    Length(u32, Unit),
+    Length(f32, Unit),
     Colorvalue(Color),
 }
 
@@ -71,6 +73,16 @@ impl Selector {
         let b = simple.class.len();
         let c = simple.tag_name.iter().count();
         (a, b, c)
+    }
+}
+
+impl Value {
+    /// Return the size of a length in px, or zero for non-lengths.
+    pub fn to_px(&self) -> f32 {
+        match *self {
+            Value::Length(f, Unit::Px) => f,
+            _ => 0.0,
+        }
     }
 }
 
@@ -219,21 +231,7 @@ impl Parser {
 
     /// Parse a size, e.g. `24px`.
     fn parse_length(&mut self) -> Value {
-        let num = {
-            let mut num = "".to_string();
-            loop {
-                let c = self.next_char();
-                match c {
-                    '0'..='9' => {
-                        num.push(c);
-                        self.consume_char();
-                    }
-                    _ => break,
-                };
-            }
-            u32::from_str_radix(&num, 10).unwrap()
-        };
-
+        let num = self.parse_float();
         let unit = {
             if self.input[self.pos..].starts_with("px") {
                 self.pos += 2;
@@ -242,8 +240,15 @@ impl Parser {
                 panic!("Unexpected unit, rather than \"px\".");
             }
         };
-
         Value::Length(num, unit)
+    }
+
+    fn parse_float(&mut self) -> f32 {
+        let s = self.consume_while(|c| match c {
+            '0'..='9' | '.' => true,
+            _ => false,
+        });
+        FromStr::from_str(&*s).unwrap()
     }
 
     fn parse_identifier(&mut self) -> String {
@@ -338,11 +343,11 @@ mod tests {
                 declarations: vec![
                     Declaration {
                         name: "margin-bottom".to_string(),
-                        value: Value::Length(20, Unit::Px),
+                        value: Value::Length(20.0, Unit::Px),
                     },
                     Declaration {
                         name: "padding".to_string(),
-                        value: Value::Length(10, Unit::Px),
+                        value: Value::Length(10.0, Unit::Px),
                     },
                 ],
             },
@@ -595,7 +600,7 @@ mod parser_tests {
             input: "123px;".to_string(),
         };
         let length = parser.parse_length();
-        assert_eq!(length, Value::Length(123, Unit::Px));
+        assert_eq!(length, Value::Length(123.0, Unit::Px));
         assert_eq!(parser.pos, 5);
     }
 
