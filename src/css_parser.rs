@@ -1,16 +1,5 @@
 //! A CSS parser that supports a tiny subset of CSS.
 
-use std::str::FromStr;
-
-/// Parse a whole CSS stylesheet.
-pub fn parse(source: String) -> Stylesheet {
-    let mut parser = Parser {
-        pos: 0,
-        input: source,
-    };
-    parser.parse_rules()
-}
-
 #[derive(Debug, PartialEq)]
 pub struct Stylesheet {
     pub rules: Vec<Rule>,
@@ -84,6 +73,15 @@ impl Value {
             _ => 0.0,
         }
     }
+}
+
+/// Parse a whole CSS stylesheet.
+pub fn parse(source: String) -> Stylesheet {
+    let mut parser = Parser {
+        pos: 0,
+        input: source,
+    };
+    parser.parse_rules()
 }
 
 struct Parser {
@@ -248,7 +246,7 @@ impl Parser {
             '0'..='9' | '.' => true,
             _ => false,
         });
-        FromStr::from_str(&*s).unwrap()
+        s.parse().unwrap()
     }
 
     fn parse_identifier(&mut self) -> String {

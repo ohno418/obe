@@ -1,3 +1,5 @@
+//! DOM data structures.
+
 use std::collections::{HashMap, HashSet};
 
 #[derive(Debug, PartialEq)]

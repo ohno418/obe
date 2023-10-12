@@ -12,7 +12,11 @@ type PropertyMap = HashMap<String, Value>;
 #[derive(Debug)]
 pub struct StyledNode<'a> {
     /// A pointer to a DOM node.
+    ///
+    /// NOTE: For now, This is only for debug.
+    #[allow(dead_code)]
     node: &'a Node,
+
     specified_values: PropertyMap,
     pub children: Vec<StyledNode<'a>>,
 }
