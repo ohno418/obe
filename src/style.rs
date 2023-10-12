@@ -1,7 +1,7 @@
 //! This module controls the style step, combining the DOM and the CSSOM into
 //! a style tree (a render tree).
 
-use crate::css_parser::{Rule, Selector, SimpleSelector, Specificity, Stylesheet, Value};
+use crate::css::{Rule, Selector, SimpleSelector, Specificity, Stylesheet, Value};
 use crate::dom::{ElementData, Node, NodeType};
 use std::collections::HashMap;
 

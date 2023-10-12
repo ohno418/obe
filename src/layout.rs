@@ -1,7 +1,7 @@
 //! This module controls the layout step, building a layout tree from a style
 //! tree.
 
-use crate::css_parser::{Unit, Value};
+use crate::css::{Unit, Value};
 use crate::style::{Display, StyledNode};
 
 #[derive(Debug)]

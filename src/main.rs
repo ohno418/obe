@@ -1,11 +1,11 @@
-mod css_parser;
+mod css;
 mod dom;
-mod html_parser;
+mod html;
 mod layout;
 mod style;
 
 fn main() {
-    let dom = html_parser::parse(
+    let dom = html::parse(
         r#"
         <html>
             <body>
@@ -17,7 +17,7 @@ fn main() {
         </html>"#
             .to_string(),
     );
-    let cssom = css_parser::parse(
+    let cssom = css::parse(
         r#"
         h1, h2, h3 { margin: auto; color: #cc0000; }
         div.note { margin-bottom: 20px; padding: 10px; }
