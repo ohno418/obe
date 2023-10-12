@@ -64,8 +64,10 @@ struct Dimensions {
 
 #[derive(Debug, Default)]
 struct Rect {
+    // position:
     x: f32,
     y: f32,
+    // sizes:
     width: f32,
     height: f32,
 }
@@ -95,7 +97,7 @@ impl<'a> LayoutBox<'a> {
     }
 
     /// Lay out a box and its descendants.
-    fn layout(&mut self, containing_block: Dimensions) {
+    fn layout(&mut self, containing_block: &Dimensions) {
         match self.box_type {
             BoxType::BlockNode(_) => self.layout_block(containing_block),
             BoxType::InlineNode(_) | BoxType::AnonymousBlock => {} // TODO
@@ -103,13 +105,13 @@ impl<'a> LayoutBox<'a> {
     }
 
     /// Lay out a block-level element and its descendants.
-    fn layout_block(&mut self, containing_block: Dimensions) {
+    fn layout_block(&mut self, containing_block: &Dimensions) {
         // Child width can depend on parent width, so we need to calculate
         // this box's width before laying out its children.
         self.calculate_block_width(containing_block);
 
         // Determine where the box is located within its container.
-        // self.calculate_block_position(containing_block);
+        self.calculate_block_position(containing_block);
 
         // Recursively lay out the children of this box.
         self.layout_block_children();
@@ -119,7 +121,7 @@ impl<'a> LayoutBox<'a> {
         self.calculate_block_height();
     }
 
-    fn calculate_block_width(&mut self, containing_block: Dimensions) {
+    fn calculate_block_width(&mut self, containing_block: &Dimensions) {
         let style = self.get_style_node();
 
         // Check CSS `width` property.
@@ -208,25 +210,59 @@ impl<'a> LayoutBox<'a> {
         }
 
         let d = &mut self.dimensions;
+
         d.content.width = width.to_px();
+
         d.padding.left = padding_left.to_px();
         d.padding.right = padding_right.to_px();
+
         d.border.left = border_left.to_px();
         d.border.right = border_right.to_px();
+
         d.margin.left = margin_left.to_px();
         d.margin.right = margin_right.to_px();
     }
 
-    // fn calculate_block_position(&mut self, containing_block: Dimensions) {
-    //     todo!()
-    // }
+    fn calculate_block_position(&mut self, containing_block: &Dimensions) {
+        let style = self.get_style_node();
+        let d = &mut self.dimensions;
+
+        // margin, border, and padding have initial value 0.
+        let zero = Value::Length(0.0, Unit::Px);
+
+        d.padding.top = style.lookup("padding-top", "padding", &zero).to_px();
+        d.padding.bottom = style.lookup("padding-bottom", "padding", &zero).to_px();
+
+        d.border.top = style.lookup("border-top", "border", &zero).to_px();
+        d.border.bottom = style.lookup("border-bottom", "border", &zero).to_px();
+
+        d.margin.top = style.lookup("margin-top", "margin", &zero).to_px();
+        d.margin.bottom = style.lookup("margin-bottom", "margin", &zero).to_px();
+
+        d.content.x = containing_block.content.x + d.margin.left + d.border.left + d.padding.left;
+        // Position the box below all the previous boxes in the container.
+        d.content.y = containing_block.content.y
+            + containing_block.content.height
+            + d.margin.top
+            + d.border.top
+            + d.padding.top;
+    }
 
     fn layout_block_children(&mut self) {
-        todo!()
+        let d = &mut self.dimensions;
+        for child in &mut self.children {
+            child.layout(d);
+            // Track the height so each child is laid out below the previous content.
+            d.content.height = d.content.height + child.dimensions.margin_box().height;
+        }
     }
 
     fn calculate_block_height(&mut self) {
-        todo!()
+        // If the height is set to an explicit length, use the exact length.
+        // Otherwise, just keep the value set by `layout_block_children`.
+        if let Some(Value::Length(h, Unit::Px)) = self.get_style_node().value("height") {
+            self.dimensions.content.height = h;
+        }
     }
 
     /// Where a new inline child should go.
@@ -245,6 +281,47 @@ impl<'a> LayoutBox<'a> {
                 }
                 self.children.last_mut().unwrap()
             }
+        }
+    }
+}
+
+impl Dimensions {
+    fn padding_box(&self) -> Rect {
+        Rect {
+            x: self.content.x - self.padding.left,
+            y: self.content.y - self.padding.top,
+            width: self.content.width + self.padding.left + self.padding.right,
+            height: self.content.height + self.padding.top + self.padding.bottom,
+        }
+    }
+
+    fn border_box(&self) -> Rect {
+        let Rect {
+            x,
+            y,
+            width,
+            height,
+        } = self.padding_box();
+        Rect {
+            x: x - self.border.left,
+            y: y - self.border.top,
+            width: width + self.border.left + self.border.right,
+            height: height + self.border.top + self.border.bottom,
+        }
+    }
+
+    fn margin_box(&self) -> Rect {
+        let Rect {
+            x,
+            y,
+            width,
+            height,
+        } = self.border_box();
+        Rect {
+            x: x - self.margin.left,
+            y: y - self.margin.top,
+            width: width + self.margin.left + self.margin.right,
+            height: height + self.margin.top + self.margin.bottom,
         }
     }
 }
