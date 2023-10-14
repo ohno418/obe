@@ -47,7 +47,6 @@ fn main() {
     let canvas = painting::paint(&layout, width as usize, height as usize);
 
     // Save output as an image file.
-    // let file = File::create(&Path::new("output.png")).unwrap();
     let (w, h) = (canvas.width as u32, canvas.height as u32);
     let buffer: Vec<image::Rgb<u8>> = unsafe { std::mem::transmute(canvas.pixels) };
     let img = image::ImageBuffer::from_fn(w, h, |x, y| buffer[(y * w + x) as usize]);
