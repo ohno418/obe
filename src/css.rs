@@ -44,11 +44,11 @@ pub enum Unit {
     Px,
 }
 
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Copy, Debug, PartialEq)]
 pub struct Color {
-    r: u8,
-    g: u8,
-    b: u8,
+    pub r: u8,
+    pub g: u8,
+    pub b: u8,
 }
 
 /// spec: https://www.w3.org/TR/selectors/#specificity

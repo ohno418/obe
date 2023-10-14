@@ -6,13 +6,13 @@ use crate::style::{Display, StyledNode};
 
 #[derive(Debug)]
 pub struct LayoutBox<'a> {
-    dimensions: Dimensions,
-    box_type: BoxType<'a>,
-    children: Vec<LayoutBox<'a>>,
+    pub dimensions: Dimensions,
+    pub box_type: BoxType<'a>,
+    pub children: Vec<LayoutBox<'a>>,
 }
 
 #[derive(Debug)]
-enum BoxType<'a> {
+pub enum BoxType<'a> {
     BlockNode(&'a StyledNode<'a>),
     InlineNode(&'a StyledNode<'a>),
     /// Anonymous block box, that is automatically inserted by browser.
@@ -23,31 +23,31 @@ enum BoxType<'a> {
 #[derive(Debug, Default)]
 pub struct Dimensions {
     /// Position of the content area relative to the document origin.
-    content: Rect,
+    pub content: Rect,
 
     // Surrounding edges.
     // spec: https://www.w3.org/TR/CSS2/box.html#box-dimensions
-    padding: EdgeSizes,
-    border: EdgeSizes,
-    margin: EdgeSizes,
+    pub padding: EdgeSizes,
+    pub border: EdgeSizes,
+    pub margin: EdgeSizes,
 }
 
-#[derive(Debug, Default)]
-struct Rect {
+#[derive(Copy, Clone, Debug, Default)]
+pub struct Rect {
     // position:
-    x: f32,
-    y: f32,
+    pub x: f32,
+    pub y: f32,
     // sizes:
-    width: f32,
-    height: f32,
+    pub width: f32,
+    pub height: f32,
 }
 
 #[derive(Debug, Default)]
-struct EdgeSizes {
-    left: f32,
-    right: f32,
-    top: f32,
-    bottom: f32,
+pub struct EdgeSizes {
+    pub left: f32,
+    pub right: f32,
+    pub top: f32,
+    pub bottom: f32,
 }
 
 impl<'a> LayoutBox<'a> {
@@ -310,7 +310,7 @@ impl Dimensions {
         }
     }
 
-    fn border_box(&self) -> Rect {
+    pub fn border_box(&self) -> Rect {
         let Rect {
             x,
             y,
