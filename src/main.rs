@@ -38,19 +38,20 @@ fn main() {
     let style = style::style_tree(&dom, &cssom);
 
     // Since we don't have an actual window, hard-code the "viewport" size.
+    let (width, height) = (800.0, 600.0);
     let mut viewport: layout::Dimensions = Default::default();
-    viewport.content.width = 800.0;
-    viewport.content.height = 600.0;
+    viewport.content.width = width;
+    viewport.content.height = height;
 
     let layout = layout::layout_tree(&style, &mut viewport);
-    let canvas = painting::paint(&layout, 800, 600);
+    let canvas = painting::paint(&layout, width as usize, height as usize);
 
     // Save output as an image file.
     // let file = File::create(&Path::new("output.png")).unwrap();
     let (w, h) = (canvas.width as u32, canvas.height as u32);
     let buffer: Vec<image::Rgba<u8>> = unsafe { std::mem::transmute(canvas.pixels) };
-    let img = image::ImageBuffer::from_fn(w, h, |x, y| {
-        buffer[(y * w + x) as usize]
-    });
-    image::DynamicImage::ImageRgba8(img).save("output.png").unwrap();
+    let img = image::ImageBuffer::from_fn(w, h, |x, y| buffer[(y * w + x) as usize]);
+    image::DynamicImage::ImageRgba8(img)
+        .save("output.png")
+        .unwrap();
 }
