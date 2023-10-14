@@ -1,11 +1,26 @@
 use crate::css::{Color, Value};
 use crate::layout::{BoxType, LayoutBox, Rect};
 
-#[derive(Debug)]
+use std::fmt;
+
 pub struct Canvas {
     pub pixels: Vec<Color>,
     pub width: usize,
     pub height: usize,
+}
+
+impl fmt::Debug for Canvas {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "Canvas width={} height={} pixels:\n", self.width, self.height)?;
+        for y in 0..self.height {
+            for x in 0..self.width {
+                let pixel = self.pixels[x + y * self.width];
+                write!(f, "#{:02x}{:02x}{:02x} ", pixel.r, pixel.g, pixel.b)?;
+            }
+            write!(f, "\n")?;
+        }
+        fmt::Result::Ok(())
+    }
 }
 
 pub fn paint(layout_box: &LayoutBox, width: usize, height: usize) -> Canvas {
@@ -20,6 +35,7 @@ pub fn paint(layout_box: &LayoutBox, width: usize, height: usize) -> Canvas {
 /// Display list, a list of display commands to execute.
 type DisplayList = Vec<DisplayCommand>;
 
+#[derive(Debug)]
 enum DisplayCommand {
     /// Paint a solid-color rectangle.
     SolidColor(Color, Rect),
