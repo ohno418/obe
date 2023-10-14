@@ -163,6 +163,10 @@ impl Parser {
                     self.consume_char();
                     selector.class.push(self.parse_identifier());
                 }
+                '*' => {
+                    // universal selector
+                    self.consume_char();
+                }
                 'a'..='z' | 'A'..='Z' => {
                     selector.tag_name = Some(self.parse_identifier());
                 }
