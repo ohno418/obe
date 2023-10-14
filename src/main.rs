@@ -49,9 +49,9 @@ fn main() {
     // Save output as an image file.
     // let file = File::create(&Path::new("output.png")).unwrap();
     let (w, h) = (canvas.width as u32, canvas.height as u32);
-    let buffer: Vec<image::Rgba<u8>> = unsafe { std::mem::transmute(canvas.pixels) };
+    let buffer: Vec<image::Rgb<u8>> = unsafe { std::mem::transmute(canvas.pixels) };
     let img = image::ImageBuffer::from_fn(w, h, |x, y| buffer[(y * w + x) as usize]);
-    image::DynamicImage::ImageRgba8(img)
+    image::DynamicImage::ImageRgb8(img)
         .save("output.png")
         .unwrap();
 }
