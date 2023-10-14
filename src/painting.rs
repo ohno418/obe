@@ -11,7 +11,11 @@ pub struct Canvas {
 
 impl fmt::Debug for Canvas {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "Canvas width={} height={} pixels:\n", self.width, self.height)?;
+        write!(
+            f,
+            "Canvas width={} height={} pixels:\n",
+            self.width, self.height
+        )?;
         for y in 0..self.height {
             for x in 0..self.width {
                 let pixel = self.pixels[x + y * self.width];
